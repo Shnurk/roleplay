@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Бросок костей · Dice Roller</title>
+  <style>
+    :root{--paper:#f4efdf;--paper-2:#eee5d0;--ink:#302923;--sub:#73695f;--stroke:#d9cbb4;--red:#8b3f3d;--red-dark:#702d2c;--gold:#b4935e;--green:#4a6a50;--white:#fffdf6}
+    *{box-sizing:border-box}
+    html{scrollbar-color:#c9baa0 var(--paper)}
+    body{margin:0;min-width:275px;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;font-size:14px}
+    body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.32;background-image:radial-gradient(#947d5b26 0.75px,transparent 0.9px);background-size:8px 8px;z-index:0}
+    button,input{font:inherit}
+    button{cursor:pointer}
+    button:focus-visible,input:focus-visible{outline:3px solid #ba8b45;outline-offset:2px}
+    .shell{position:relative;width:min(100%,620px);margin:auto;padding:20px 22px 22px}
+    header{display:flex;align-items:center;gap:15px;margin-bottom:17px;padding-bottom:14px;border-bottom:1px solid var(--stroke)}
+    .emblem{width:57px;height:57px;flex:0 0 57px;display:grid;place-items:center;border:1px solid #c3ad85;background:linear-gradient(145deg,#f7f0dc,#e4d3ae);border-radius:14px;color:var(--red);box-shadow:0 2px 0 #dfd2bb}
+    .emblem svg{width:40px;height:40px}
+    .overline{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:2.5px;color:var(--red);margin-bottom:3px}
+    h1{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:27px;letter-spacing:-.7px;margin:0;line-height:1.05}
+    .subtitle{font-size:12px;color:var(--sub);margin:5px 0 0}
+    .field-label{font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#6e5b45;margin:0 0 9px}
+    .dice-types{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:19px}
+    .die{border:1px solid var(--stroke);border-radius:9px;min-width:0;min-height:44px;padding:4px 1px;color:#645b53;background:#fffaf0;box-shadow:0 2px 0 #dfd6c5;font-weight:800;letter-spacing:-.3px;transition:background .15s,border-color .15s,transform .15s}
+    .die[aria-pressed=true]{background:var(--red);border-color:var(--red-dark);color:white;box-shadow:0 2px 0 #632927}
+    .die:active{transform:translateY(1px)}
+    .controls{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:14px}
+    .control-panel{background:#fff9eaaf;border:1px solid var(--stroke);padding:11px 12px 12px;border-radius:12px}
+    .control-panel .field-label{margin:0 0 9px}
+    .stepper{display:grid;grid-template-columns:39px minmax(0,1fr) 39px;gap:7px;align-items:center}
+    .step{height:38px;display:grid;place-items:center;border:1px solid #cfc0a7;border-radius:8px;background:#fffdf8;color:#614a37;font-size:21px;font-weight:400;line-height:1}
+    .step:active{background:var(--paper-2)}
+    .step:disabled{opacity:.35;cursor:not-allowed}
+    .num{width:100%;min-width:0;border:0;background:transparent;color:var(--ink);text-align:center;font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;outline-offset:0}
+    .hint{font-size:10px;color:var(--sub);margin:7px 0 0;text-align:center}
+    .formula{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px dashed #cbbb9c;padding:10px 13px;margin-bottom:13px;border-radius:9px;background:#ede4d2a6}
+    .formula span{font-size:12px;color:var(--sub)}
+    .formula strong{color:var(--red-dark);font-size:17px;font-weight:800;letter-spacing:.2px;font-variant-numeric:tabular-nums}
+    .roll-button{width:100%;min-height:52px;background:var(--red);border:1px solid var(--red-dark);border-bottom:4px solid #682724;border-radius:11px;color:white;font-weight:800;font-size:16px;letter-spacing:.45px;display:flex;justify-content:center;align-items:center;gap:11px;transition:transform .1s,background .15s;margin-bottom:15px}
+    .roll-button:hover{background:#9d4a47}
+    .roll-button:active{transform:translateY(2px);border-bottom-width:2px;margin-bottom:17px}
+    .roll-button:disabled{opacity:.7;cursor:default}
+    .dice-icon{font-size:24px;line-height:1}
+    .result{background:linear-gradient(160deg,#fffdf5,#f2e9d7);border:1px solid #d7c6a8;border-radius:14px;min-height:162px;padding:15px 16px 13px;text-align:center;box-shadow:inset 0 1px #fff,0 2px 0 #eadcc4;position:relative;overflow:hidden}
+    .result:after{content:'✧';font-family:Georgia,serif;font-size:110px;line-height:1;position:absolute;top:3px;right:10px;color:#ddc79d35;pointer-events:none}
+    .result-kicker{position:relative;z-index:1;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#887455}
+    .total{position:relative;z-index:1;font-family:Georgia,"Times New Roman",serif;color:var(--red-dark);font-size:65px;font-weight:700;line-height:1.05;margin:4px 0 3px;font-variant-numeric:lining-nums tabular-nums}
+    .result-empty .total{color:#b9a992;font-size:53px}
+    .calculation{position:relative;z-index:1;color:#655c52;font-size:13px;min-height:20px;overflow-wrap:anywhere}
+    .roll-detail{position:relative;z-index:1;margin:11px 0 0;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}
+    .chip{display:inline-flex;align-items:center;justify-content:center;min-width:29px;height:28px;padding:0 6px;background:white;border:1px solid #dfd2be;border-radius:7px;font-size:13px;font-weight:750;color:#493b32;font-variant-numeric:tabular-nums}
+    .chip.max{color:#427047;border-color:#a9c5aa;background:#f3faf0}
+    .chip.min{color:#a3443a;border-color:#deaba4;background:#fff3ee}
+    .result.roll-anim .total{animation:pulse .18s linear infinite alternate}
+    @keyframes pulse{0%{transform:translateY(1px);opacity:.58}100%{transform:translateY(-1px);opacity:1}}
+    .footbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:13px 0 4px}
+    .footbar h2{font-size:12px;letter-spacing:1.1px;text-transform:uppercase;color:#665540;margin:0}
+    .clear{border:0;background:transparent;color:var(--red);font-size:12px;font-weight:700;text-decoration:underline;text-underline-offset:3px;padding:7px 0}
+    .clear:disabled{color:#aea395;text-decoration:none;cursor:default}
+    .history{display:flex;flex-direction:column;gap:6px;max-height:175px;overflow:auto;padding:1px}
+    .history-row{background:#fffaf1d1;border:1px solid #e3d7c3;border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:9px;font-size:12px;font-variant-numeric:tabular-nums}
+    .history-row .counter{color:#93816a;min-width:23px}
+    .history-row .history-formula{font-weight:700;color:#57463b;white-space:nowrap}
+    .history-row .history-breakdown{color:#897763;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+    .history-row strong{margin-left:auto;color:var(--red-dark);font-size:16px}
+    .history-empty{color:#978a78;font-size:12px;text-align:center;padding:14px 0 4px}
+    .actions{display:flex;justify-content:flex-end;margin:9px 0 0}
+    .copy{background:transparent;border:1px solid #cdbda4;border-radius:7px;padding:7px 11px;color:#694b3b;font-size:12px;font-weight:700}
+    .copy:disabled{color:#ae9e88;border-color:#ded1bf;cursor:default}
+    .note{margin-top:12px;color:#948471;text-align:center;font-size:10px}
+    @media (max-width:390px){.shell{padding:14px 12px 17px}h1{font-size:23px}.emblem{width:48px;height:48px;flex-basis:48px}.emblem svg{width:33px;height:33px}header{gap:10px}.dice-types{gap:4px}.die{font-size:12px;min-height:41px}.controls{gap:8px}.control-panel{padding:10px 7px}.stepper{grid-template-columns:32px minmax(0,1fr) 32px;gap:2px}.step{height:36px}.num{font-size:21px}.subtitle{font-size:11px}.total{font-size:56px}}
+    @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+<main class="shell">
+  <header>
+    <div class="emblem" aria-hidden="true"><svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M30 4 52 18 55 42 30 56 5 42 8 18Z"/><path d="M30 4v18m0 34V22M8 18l22 4 22-4M5 42l25-20 25 20M5 42l25 14 25-14"/><path d="M15 35 30 22 45 35 30 48Z"/></svg></div>
+    <div>
+      <div class="overline">НАСТОЛЬНЫЕ ИГРЫ</div>
+      <h1>Бросок костей</h1>
+      <p class="subtitle">Кубики, бонусы и штрафы — в одном месте</p>
+    </div>
+  </header>
+
+  <section aria-labelledby="type-title">
+    <h2 class="field-label" id="type-title">Выберите кубик</h2>
+    <div class="dice-types" role="group" aria-label="Количество граней кубика">
+      <button class="die" type="button" data-sides="4" aria-pressed="false">D4</button>
+      <button class="die" type="button" data-sides="6" aria-pressed="false">D6</button>
+      <button class="die" type="button" data-sides="8" aria-pressed="false">D8</button>
+      <button class="die" type="button" data-sides="10" aria-pressed="false">D10</button>
+      <button class="die" type="button" data-sides="12" aria-pressed="false">D12</button>
+      <button class="die" type="button" data-sides="20" aria-pressed="true">D20</button>
+      <button class="die" type="button" data-sides="100" aria-pressed="false">D100</button>
+    </div>
+  </section>
+
+  <div class="controls">
+    <section class="control-panel" aria-labelledby="count-title">
+      <h2 id="count-title" class="field-label">Количество</h2>
+      <div class="stepper">
+        <button class="step" type="button" id="count-minus" aria-label="Уменьшить количество кубиков">−</button>
+        <input class="num" id="count" aria-label="Количество кубиков" inputmode="numeric" type="number" min="1" max="20" step="1" value="1">
+        <button class="step" type="button" id="count-plus" aria-label="Увеличить количество кубиков">+</button>
+      </div>
+      <p class="hint">от 1 до 20 кубиков</p>
+    </section>
+    <section class="control-panel" aria-labelledby="mod-title">
+      <h2 id="mod-title" class="field-label">Бонус / штраф</h2>
+      <div class="stepper">
+        <button class="step" type="button" id="mod-minus" aria-label="Уменьшить модификатор">−</button>
+        <input class="num" id="mod" aria-label="Бонус или штраф" inputmode="numeric" type="number" min="-999" max="999" step="1" value="0">
+        <button class="step" type="button" id="mod-plus" aria-label="Увеличить модификатор">+</button>
+      </div>
+      <p class="hint">от −999 до +999</p>
+    </section>
+  </div>
+
+  <div class="formula"><span>Ваш бросок</span><strong id="formula">1d20</strong></div>
+  <button class="roll-button" id="roll" type="button"><span class="dice-icon" aria-hidden="true">⚄</span><span>БРОСИТЬ КОСТИ</span></button>
+
+  <section class="result result-empty" id="result" aria-label="Результат броска" aria-live="polite" aria-atomic="true">
+    <div class="result-kicker" id="result-kicker">РЕЗУЛЬТАТ</div>
+    <div class="total" id="total">—</div>
+    <div class="calculation" id="calculation">Выберите параметры и сделайте бросок</div>
+    <div class="roll-detail" id="detail"></div>
+  </section>
+  <div class="actions"><button type="button" class="copy" id="copy" disabled>Скопировать результат</button></div>
+
+  <div class="footbar"><h2>История бросков</h2><button type="button" class="clear" id="clear" disabled>Очистить</button></div>
+  <div class="history" id="history"><div class="history-empty">Здесь появятся ваши броски</div></div>
+  <p class="note">Броски случайны. История видна только в вашем окне.</p>
+</main>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const types = Array.from(document.querySelectorAll('.die'));
+  const state = {sides:20,count:1,mod:0,busy:false,history:[],last:null};
+  const intBound = (raw, min, max, fallback) => {
+    const n = Number(raw);
+    if (raw === '' || !Number.isFinite(n)) return fallback;
+    return Math.max(min, Math.min(max, Math.trunc(n)));
+  };
+  const signed = n => n > 0 ? ` + ${n}` : n < 0 ? ` − ${Math.abs(n)}` : '';
+  const formula = (count,sides,mod) => `${count}d${sides}${signed(mod)}`;
+  function renderControls(){
+    $('count').value = state.count;
+    $('mod').value = state.mod;
+    $('formula').textContent = formula(state.count,state.sides,state.mod);
+    $('count-minus').disabled = state.count <= 1;
+    $('count-plus').disabled = state.count >= 20;
+    $('mod-minus').disabled = state.mod <= -999;
+    $('mod-plus').disabled = state.mod >= 999;
+    for (const button of types) button.setAttribute('aria-pressed', String(Number(button.dataset.sides) === state.sides));
+  }
+  function syncInputs(){
+    state.count=intBound($('count').value,1,20,state.count);
+    state.mod=intBound($('mod').value,-999,999,state.mod);
+    renderControls();
+  }
+  $('count').addEventListener('change',syncInputs);
+  $('mod').addEventListener('change',syncInputs);
+  $('count').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('count').blur();}});
+  $('mod').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('mod').blur();}});
+  const step = (key,delta,min,max) => {syncInputs();state[key]=Math.max(min,Math.min(max,state[key]+delta));renderControls();};
+  $('count-minus').addEventListener('click',()=>step('count',-1,1,20));
+  $('count-plus').addEventListener('click',()=>step('count',1,1,20));
+  $('mod-minus').addEventListener('click',()=>step('mod',-1,-999,999));
+  $('mod-plus').addEventListener('click',()=>step('mod',1,-999,999));
+  types.forEach(btn=>btn.addEventListener('click',()=>{state.sides=Number(btn.dataset.sides);renderControls();}));
+
+  // Rejection sampling eliminates modulo bias for every supported die size.
+  function rollDie(sides){
+    if (globalThis.crypto && typeof crypto.getRandomValues === 'function'){
+      const bucket = Math.floor(4294967296/sides)*sides;
+      const value = new Uint32Array(1);
+      do {crypto.getRandomValues(value);} while(value[0]>=bucket);
+      return (value[0]%sides)+1;
+    }
+    return Math.floor(Math.random()*sides)+1;
+  }
+  const fmtBreakdown=(values,mod)=>`${values.join(' + ')}${signed(mod)} = ${values.reduce((a,b)=>a+b,0)+mod}`;
+  function showResult(r){
+    const result=$('result');result.classList.remove('result-empty','roll-anim');
+    $('result-kicker').textContent='ИТОГ БРОСКА';
+    $('total').textContent=r.total;
+    $('calculation').textContent=fmtBreakdown(r.values,r.mod);
+    const detail=$('detail');detail.replaceChildren();
+    r.values.forEach(n=>{
+      const chip=document.createElement('span');chip.className='chip'+(n===r.sides?' max':n===1?' min':'');chip.textContent=n;
+      chip.title=`D${r.sides}: ${n}`;
+      detail.append(chip);
+    });
+    $('copy').disabled=false;
+  }
+  function renderHistory(){
+    const root=$('history');root.replaceChildren();
+    $('clear').disabled=state.history.length===0;
+    if(state.history.length===0){const empty=document.createElement('div');empty.className='history-empty';empty.textContent='Здесь появятся ваши броски';root.append(empty);return;}
+    for(const r of state.history){
+      const row=document.createElement('div');row.className='history-row';
+      const num=document.createElement('span');num.className='counter';num.textContent=`#${r.id}`;
+      const f=document.createElement('span');f.className='history-formula';f.textContent=formula(r.count,r.sides,r.mod);
+      const b=document.createElement('span');b.className='history-breakdown';b.textContent=`[${r.values.join(', ')}]`;
+      const t=document.createElement('strong');t.textContent=r.total;
+      row.append(num,f,b,t);root.append(row);
+    }
+  }
+  function roll(){
+    if(state.busy)return;
+    syncInputs();state.busy=true;
+    $('roll').disabled=true;
+    $('roll').lastElementChild.textContent='БРОСАЕМ…';
+    const r={count:state.count,sides:state.sides,mod:state.mod,values:[],id:state.history.length ? state.history[0].id+1:1};
+    r.values=Array.from({length:r.count},()=>rollDie(r.sides));
+    r.total=r.values.reduce((a,b)=>a+b,0)+r.mod;
+    const box=$('result');box.classList.remove('result-empty');box.classList.add('roll-anim');
+    $('result-kicker').textContent='КОСТИ БРОШЕНЫ…';
+    $('calculation').textContent='Определяем результат';
+    $('detail').replaceChildren();
+    let i=0;
+    const timer=setInterval(()=>{$('total').textContent=1+(i*11%r.sides);i+=1;},58);
+    setTimeout(()=>{
+      clearInterval(timer);state.busy=false;state.last=r;state.history.unshift(r);
+      if(state.history.length>10)state.history.pop();
+      showResult(r);renderHistory();$('roll').disabled=false;
+      $('roll').lastElementChild.textContent='БРОСИТЬ ЕЩЁ';
+    },500);
+  }
+  $('roll').addEventListener('click',roll);
+  $('clear').addEventListener('click',()=>{state.history=[];renderHistory();});
+  $('copy').addEventListener('click',async()=>{
+    if(!state.last)return;
+    const r=state.last;
+    const text=`${formula(r.count,r.sides,r.mod)} → [${r.values.join(', ')}] → ${r.total}`;
+    try{
+      if(navigator.clipboard&&window.isSecureContext) await navigator.clipboard.writeText(text);
+      else {const input=document.createElement('textarea');input.value=text;input.style.position='fixed';input.style.opacity='0';document.body.append(input);input.select();if(!document.execCommand('copy'))throw new Error('copy');input.remove();}
+      $('copy').textContent='Скопировано';setTimeout(()=>$('copy').textContent='Скопировать результат',1250);
+    }catch(e){$('copy').textContent='Копирование недоступно';setTimeout(()=>$('copy').textContent='Скопировать результат',1600);}
+  });
+  renderControls();renderHistory();
+})();
+</script>
+</body>
+</html>
